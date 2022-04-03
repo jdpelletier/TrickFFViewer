@@ -339,7 +339,6 @@ class FitsViewer(QtGui.QMainWindow):
         self.fitsimage.get_canvas().delete_object_by_tag(self.boxtag)
         self.box = self.recdc(left, down, right, up, color='green')
         self.fitsimage.get_canvas().add(self.box, tag=self.boxtag, redraw=True)
-        self.wsetroi.setEnabled(False)
 
     ##Start of image find and processing code
 
@@ -442,7 +441,6 @@ class FitsViewer(QtGui.QMainWindow):
         text = f"Filter: {filter}"
         self.filt_info.setText(text)
         self.wsky.setEnabled(True)
-        self.wtakeff.setEnabled(True)
 
     def addWcs(self, filen):
         w = wcs.WCS(naxis=2)
@@ -554,7 +552,6 @@ class FitsViewer(QtGui.QMainWindow):
         # self.fitsimage.set_pan(data_x, data_y)
         self.xclick = data_x
         self.yclick = data_y
-        self.wsetroi.setEnabled(True)
         self.pickstar(self.fitsimage)
 
 def main():
