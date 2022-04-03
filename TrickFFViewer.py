@@ -228,7 +228,7 @@ class FitsViewer(QtGui.QMainWindow):
             ra_txt = 'BAD WCS'
             dec_txt = 'BAD WCS'
 
-        text = "X: %.2f  Y: %.2f  Value: %s" % (int(fits_x), int(fits_y), value)
+        text = f"X: {int(fits_x)} Y: {int(fits_y)}  Value: {value}"
         self.readout.setText(text)
 
     def quit(self, *args):
