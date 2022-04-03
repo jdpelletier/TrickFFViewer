@@ -175,7 +175,7 @@ class FitsViewer(QtGui.QMainWindow):
         self.wconfirm_roi = QtGui.QPushButton("Confirm ROI")
         self.wconfirm_roi.setObjectName("confirm_roi")
         #TODO add ROI confirm function
-        self.confirm_roi.clicked.connect(self.quit)
+        self.wconfirm_roi.clicked.connect(self.quit)
         buttons_vbox_right.addWidget(self.wconfirm_roi)
         hw = QtGui.QWidget()
         hw.setLayout(buttons_vbox_right)
