@@ -55,7 +55,6 @@ class FitsViewer(QtGui.QMainWindow):
         self.logger = logger
 
         self.cachedFiles = None
-        self.video = False
         #KTL stuff
         #Cache KTL keywords
         self.trickxpos = ktl.cache('tds', 'TRKRO1X')
@@ -93,7 +92,7 @@ class FitsViewer(QtGui.QMainWindow):
         viewer_hbox = QtGui.QHBoxLayout()
         viewer_hbox.setObjectName("viewer_hbox")
         w = fi.get_widget()
-        w.setMinimumSize(QtCore.QSize(240, 240))
+        w.resize(512, 512)
         viewer_hbox.addWidget(w)
         hw = QtGui.QWidget()
         hw.setLayout(viewer_hbox)
@@ -242,7 +241,6 @@ class FitsViewer(QtGui.QMainWindow):
 
     def quit(self, *args):
         self.logger.info("Attempting to shut down the application...")
-        self.stop_video()
         self.stop_scan()
         time.sleep(2)
         self.threadpool = False
@@ -425,7 +423,7 @@ class FitsViewer(QtGui.QMainWindow):
         right = int(self.trickxpos.read()) + 8 + int(self.trickxsize.read())*3
         up = int(self.trickypos.read()) + 8 - int(self.trickysize.read())*3
         down = int(self.trickypos.read()) + 8 + int(self.trickysize.read())*3
-        print("ROI box: %d %d %d %d" %(left, right, up, down))
+        print(f"ROI box: {self.trickxpos.read()} {self.trickypos.read()}")
         return left, right, up, down
 
     def nightpath(self):
@@ -582,7 +580,6 @@ def main():
     app.setActiveWindow(w)
     w.raise_()
     w.activateWindow()
-    w.start_video()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
