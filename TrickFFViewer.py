@@ -414,7 +414,7 @@ class FitsViewer(QtGui.QMainWindow):
         right = int(self.trickxpos.read()) + 8 + int(self.trickxsize.read())*3
         up = int(self.trickypos.read()) + 8 - int(self.trickysize.read())*3
         down = int(self.trickypos.read()) + 8 + int(self.trickysize.read())*3
-        print(f"ROI box: {self.trickxpos.read()} {self.trickypos.read()}")
+        print(f"ROI box: {str(self.trickxpos.read())} {str(self.trickypos.read())}")
         return left, right, up, down
 
     def nightpath(self):
