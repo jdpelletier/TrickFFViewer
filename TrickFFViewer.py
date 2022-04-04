@@ -3,6 +3,8 @@ from os import listdir
 from os.path import abspath, isfile, join
 from pathlib import Path
 import datetime
+import csv
+import copy
 
 import numpy as np
 from astropy.io import fits
@@ -64,6 +66,15 @@ class FitsViewer(QtGui.QMainWindow):
         self.progress = ktl.cache('tds', 'progress')
         self.roipixels = ktl.cache('ao', 'TRKRO1PX')
         self.roipixels.monitor()
+        self.tkenrup = ktl.cache('ao', 'tkenrup')
+        self.tkcrxs = ktl.cache('ao','tkcrxs')
+        self.tkcrys = ktl.cache('ao','tkcrys')
+        self.tkcrevxp = ktl.cache('ao','tkcrevxp')
+        self.tkcrevyp = ktl.cache('ao','tkcrevyp')
+        self.tkcrevxo = ktl.cache('ao','tkcrevxo')
+        self.tkcrevyo = ktl.cache('ao','tkcrevyo')
+        self.tkcxim = ktl.cache('ao','tkcxim')
+        self.tkcyim = ktl.cache('ao','tkcyim')
 
         self.rawfile = ''
         self.mode = ''
@@ -334,14 +345,92 @@ class FitsViewer(QtGui.QMainWindow):
         self.load_file(self.writeFits(header, np.multiply(with_sky, mask)))
 
     def set_roi(self):
-        self.trickxpos.write(self.xclick-8)
-        self.trickypos.write(self.yclick-8)
+        xroi = self.xclick-8
+        yroi = self.yclick-8
+        self.trickxpos.write(xroi)
+        self.trickypos.write(yroi)
+        distcoeff = np.zeros(20)
+        rows = csv.reader(open('TRICK_DistCoeff.dat','r'))
+        for idx,row in enumerate(rows):
+            distcoeff[idx] = float(row[0][5:])
+        self.trk_putxy_spoc(self, xroi, yroi, distcoeff, roisz=None)
         print("TRICK ROI set")
         left, right, up, down = self.getROI()
         self.fitsimage.get_canvas().get_object_by_tag(self.boxtag)
         self.fitsimage.get_canvas().delete_object_by_tag(self.boxtag)
         self.box = self.recdc(left, down, right, up, color='green')
         self.fitsimage.get_canvas().add(self.box, tag=self.boxtag, redraw=True)
+
+    def trk_distortion_model(self, x0 ,y0, p):
+        # Translation of DistortionModel into Python
+        x0T = x0-p[0]
+        y0T = y0-p[10]
+
+        x1 = p[0]+p[1]*y0T+p[2]*x0T+p[3]*y0T**2+p[4]*y0T*x0T+p[5]*x0T**2+\
+            p[6]*y0T**3+p[7]*y0T**2*x0T+p[8]*y0T*x0T**2+p[9]*x0T**3
+
+        y1 = p[10]+p[11]*y0T+p[12]*x0T+p[13]*y0T**2+p[14]*y0T*x0T+p[15]*x0T**2+\
+            p[16]*y0T**3+p[17]*y0T**2*x0T+p[18]*y0T*x0T**2+p[19]*x0T**3
+
+        return (x1,y1)
+
+    def trk_undo_distmodel(self, x1, y1, DistC):
+        eps = 0.01 # error in pixels
+        maxiter = 20
+
+        k = 0
+        x0 = copy.copy(x1)
+        y0 = copy.copy(y1)
+        (x1p,y1p) = self.trk_distortion_model(x0,y0,DistC)
+
+        while (np.sqrt((x1p-x1)**2+(y1p-y1)**2) > eps):
+            if k >= maxiter:
+                print('No convergence in '+str(iter)+' iterations')
+                break
+
+            x0 -= (x1p-x1)
+            y0 -= (y1p-y1)
+
+            (x1p,y1p) = self.trk_distortion_model(x0,y0,DistC)
+            k += 1
+
+        return (x0,y0)
+
+    def trk_putxy_spoc(self, xroi, yroi, distcoeff, roisz=None):
+        # TODO: error handling
+
+        if roisz not in [None,2, 4, 8, 16]:
+            raise('Invalid value for roisz')
+            return
+
+        sctrack = self.tkenrup.read()
+        if sctrack:
+            # turn sctracking off
+            status = self.tkenrup.write(0)
+
+        if roisz is not None:
+            status = self.tkcrxs.write(roisz)
+            status = self.tkcrys.write(roisz)
+
+        (xp,yp) = self.trk_undo_distmodel(xroi, yroi, distcoeff)
+        status = self.tkcrevxp.write(xp)
+        status = self.tkcrevyp.write(yp)
+
+        xim = self.tkcrevxo.read()
+        yim = self.tkcrevyo.read()
+        status = self.tkcxim.write(xim)
+        status = self.tkcyim.write(yim)
+
+        # need to tigger the ROI calculator TWICE
+        status = self.tksrtrg.write(1)
+        time.sleep(0.1)    # wait 0.1 s
+        status = self.tksrtrg.write(1)
+
+        # need to set to propagate SPOC-Camera-WFC
+        status = self.tkenrup.write(1)
+        if sctrack == 0:
+            status = self.tkenrup.write(0)
+        return
 
     ##Start of image find and processing code
 
