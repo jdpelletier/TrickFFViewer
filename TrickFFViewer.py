@@ -151,7 +151,7 @@ class FitsViewer(QtGui.QMainWindow):
         self.filt_info.setObjectName("filt_info")
         image_info_vbox.addWidget(self.filt_info)
         self.image_info = QtGui.QLabel("Image: ")
-        self.image_info.setMinimumSize(QtCore.QSize(275, 0))
+        self.image_info.setMinimumSize(QtCore.QSize(175, 0))
         self.image_info.setObjectName("image_info")
         image_info_vbox.addWidget(self.image_info)
         hw = QtGui.QWidget()
