@@ -361,7 +361,7 @@ class FitsViewer(QtGui.QMainWindow):
         self.box = self.recdc(left, down, right, up, color='green')
         self.fitsimage.get_canvas().add(self.box, tag=self.boxtag, redraw=True)
 
-    def trk_distortion_model(self, x0 ,y0, p):
+    def trk_distortion_model(self, x0, y0, p):
         # Translation of DistortionModel into Python
         x0T = x0-p[0]
         y0T = y0-p[10]
@@ -375,7 +375,7 @@ class FitsViewer(QtGui.QMainWindow):
         return (x1,y1)
 
     def trk_undo_distmodel(self, x1, y1, DistC):
-        eps = 0.01 # error in pixels
+        eps = 0.5 # error in pixels
         maxiter = 20
 
         k = 0
@@ -396,6 +396,7 @@ class FitsViewer(QtGui.QMainWindow):
 
         return (x0,y0)
 
+
     def trk_putxy_spoc(self, xroi, yroi, distcoeff, roisz=None):
         # TODO: error handling
 
@@ -403,7 +404,7 @@ class FitsViewer(QtGui.QMainWindow):
             raise('Invalid value for roisz')
             return
 
-        sctrack = self.tkenrup.read()
+        sctrack = self.tkenrup.read() # what is the error handling here?
         if sctrack:
             # turn sctracking off
             status = self.tkenrup.write(0)
@@ -421,7 +422,7 @@ class FitsViewer(QtGui.QMainWindow):
         status = self.tkcxim.write(xim)
         status = self.tkcyim.write(yim)
 
-        # need to tigger the ROI calculator TWICE
+        # need to tigger the ROI calculator TWICE (as told to Bruno Femenia by Paul Stomski)
         status = self.tksrtrg.write(1)
         time.sleep(0.1)    # wait 0.1 s
         status = self.tksrtrg.write(1)
@@ -430,6 +431,9 @@ class FitsViewer(QtGui.QMainWindow):
         status = self.tkenrup.write(1)
         if sctrack == 0:
             status = self.tkenrup.write(0)
+
+        # Setting trkrordy syncs SPOC and camera values with WFC and triggers actions by WFC: bad pixel map, etc
+        status = self.trkrordy.write(1)
         return
 
     ##Start of image find and processing code
