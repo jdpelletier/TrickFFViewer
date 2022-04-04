@@ -350,7 +350,7 @@ class FitsViewer(QtGui.QMainWindow):
         self.trickxpos.write(xroi)
         self.trickypos.write(yroi)
         distcoeff = np.zeros(20)
-        rows = csv.reader(open('TRICK_DistCoeff.dat','r'))
+        rows = csv.reader(open('/usr/local/qfix/data/Trick/setup_files/TRICK_DistCoeff.dat','r'))
         for idx,row in enumerate(rows):
             distcoeff[idx] = float(row[0][5:])
         self.trk_putxy_spoc(self, xroi, yroi, distcoeff, roisz=None)
